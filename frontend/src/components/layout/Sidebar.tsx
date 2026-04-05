@@ -1,3 +1,4 @@
+import { Link, useLocation } from "react-router-dom";
 import {
   Flame,
   LayoutDashboard,
@@ -13,6 +14,8 @@ type Props = {
 };
 
 export const Sidebar = ({ isOpen, toggle }: Props) => {
+  const location = useLocation();
+
   return (
     <div
       className={`
@@ -39,33 +42,69 @@ export const Sidebar = ({ isOpen, toggle }: Props) => {
       </div>
 
       {/* Menu */}
-      <div className="space-y-4 text-sm">
-        <SidebarItem icon={LayoutDashboard} label="Overview" isOpen={isOpen} active />
-        <SidebarItem icon={Map} label="Heat Map" isOpen={isOpen} />
-        <SidebarItem icon={BarChart3} label="Analytics" isOpen={isOpen} />
-        <SidebarItem icon={Settings} label="Settings" isOpen={isOpen} />
+      <div className="space-y-3 text-sm">
+
+        <SidebarItem
+          to="/"
+          icon={LayoutDashboard}
+          label="Overview"
+          isOpen={isOpen}
+          active={location.pathname === "/"}
+        />
+
+        <SidebarItem
+          to="/map"
+          icon={Map}
+          label="Heat Map"
+          isOpen={isOpen}
+          active={location.pathname === "/map"}
+        />
+
+        <SidebarItem
+          to="/analytics"
+          icon={BarChart3}
+          label="Analytics"
+          isOpen={isOpen}
+          active={location.pathname === "/analytics"}
+        />
+
+        <SidebarItem
+          to="/settings"
+          icon={Settings}
+          label="Settings"
+          isOpen={isOpen}
+          active={location.pathname === "/settings"}
+        />
+
       </div>
     </div>
   );
 };
 
 type ItemProps = {
+  to: string;
   icon: any;
   label: string;
   isOpen: boolean;
   active?: boolean;
 };
 
-const SidebarItem = ({ icon: Icon, label, isOpen, active }: ItemProps) => {
+const SidebarItem = ({ to, icon: Icon, label, isOpen, active }: ItemProps) => {
   return (
-    <div
-      className={`
-        flex items-center gap-3 p-2 rounded-lg cursor-pointer
-        ${active ? "bg-[#1f2937] text-white" : "text-gray-400 hover:text-white"}
-      `}
-    >
-      <Icon size={18} />
-      {isOpen && <span>{label}</span>}
-    </div>
+    <Link to={to}>
+      <div
+        className={`
+          flex items-center gap-3 p-2 rounded-lg cursor-pointer transition
+          ${
+            active
+              ? "bg-[#1f2937] text-white"
+              : "text-gray-400 hover:text-white hover:bg-[#1f2937]"
+          }
+        `}
+      >
+        <Icon size={18} />
+        {isOpen && <span>{label}</span>}
+      </div>
+    </Link>
   );
 };

@@ -5,4 +5,3 @@ class HeatDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = HeatData
         fields = '__all__'
-        
