@@ -23,6 +23,5 @@ def add_heat_data(request):
 
 @api_view(['GET'])
 def get_clusters(request):
-    return Response({
-        "clusters": get_heat_clusters()
-    })
+    data = get_heat_clusters()
+    return Response(data)

@@ -9,15 +9,17 @@ import {
 import "leaflet.heat";
 import L from "leaflet";
 
+// 🔥 Type
 type Zone = {
   name: string;
   temperature: number;
   latitude: number;
   longitude: number;
   riskLevel: string;
-  cluster: number;
+  cluster?: number; // optional safety
 };
 
+// 🔥 Heat Layer Component
 const HeatLayer = ({ zones }: { zones: Zone[] }) => {
   const map = useMap();
 
@@ -46,7 +48,7 @@ const HeatLayer = ({ zones }: { zones: Zone[] }) => {
     heat.addTo(map);
 
     return () => {
-      map.removeLayer(heat);
+      map.removeLayer(heat); // ✅ prevents duplication
     };
   }, [zones, map]);
 
@@ -56,51 +58,70 @@ const HeatLayer = ({ zones }: { zones: Zone[] }) => {
 const MapView = () => {
   const [zones, setZones] = useState<Zone[]>([]);
   const [mode, setMode] = useState<"heatmap" | "points">("heatmap");
+  const [loading, setLoading] = useState(true);
 
+  // 🔥 AUTO REFRESH (DYNAMIC)
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/zones/")
-      .then((res) => res.json())
-      .then((data) => setZones(data))
-      .catch(() => console.log("Backend not ready"));
+    const fetchData = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/clusters/")
+        const data = await res.json();
+
+        console.log("DATA:", data); // debug
+
+        setZones(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("ERROR:", err);
+      }
+    };
+
+    fetchData();
+
+    const interval = setInterval(fetchData, 1000); // 🔄 every 1 sec
+    return () => clearInterval(interval);
   }, []);
 
-  const getClusterColor = (cluster: number) => {
+  // 🎨 Cluster colors
+  const getClusterColor = (cluster?: number) => {
     const colors = ["red", "blue", "green", "yellow"];
-    return colors[cluster % colors.length];
+    return colors[(cluster ?? 0) % colors.length];
   };
 
+  // 🧠 Insights
   const getClusterInsights = () => {
-  if (!zones.length) return null;
+    if (!zones.length) return null;
 
-  const clusterMap: Record<number, Zone[]> = {};
+    const clusterMap: Record<number, Zone[]> = {};
 
-  zones.forEach((z) => {
-    if (!clusterMap[z.cluster]) clusterMap[z.cluster] = [];
-    clusterMap[z.cluster].push(z);
-  });
+    zones.forEach((z) => {
+      const c = z.cluster ?? 0;
+      if (!clusterMap[c]) clusterMap[c] = [];
+      clusterMap[c].push(z);
+    });
 
-  let hottestCluster = -1;
-  let maxAvgTemp = 0;
+    let hottestCluster = -1;
+    let maxAvgTemp = 0;
 
-  Object.keys(clusterMap).forEach((c) => {
-    const cluster = Number(c);
-    const avg =
-      clusterMap[cluster].reduce((s, z) => s + z.temperature, 0) /
-      clusterMap[cluster].length;
+    Object.keys(clusterMap).forEach((c) => {
+      const cluster = Number(c);
+      const avg =
+        clusterMap[cluster].reduce((s, z) => s + z.temperature, 0) /
+        clusterMap[cluster].length;
 
-    if (avg > maxAvgTemp) {
-      maxAvgTemp = avg;
-      hottestCluster = cluster;
-    }
-  });
+      if (avg > maxAvgTemp) {
+        maxAvgTemp = avg;
+        hottestCluster = cluster;
+      }
+    });
 
-  return {
-    hottestCluster,
-    avgTemp: maxAvgTemp.toFixed(1),
+    return {
+      hottestCluster,
+      avgTemp: maxAvgTemp.toFixed(1),
+    };
   };
-};
 
-const insights = getClusterInsights();
+  const insights = getClusterInsights();
 
   return (
     <div className="h-screen w-full relative">
@@ -114,7 +135,6 @@ const insights = getClusterInsights();
           </p>
         </div>
 
-        {/* Toggle */}
         <div className="flex gap-2">
           <button
             onClick={() => setMode("heatmap")}
@@ -140,45 +160,39 @@ const insights = getClusterInsights();
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-5 left-5 bg-[#0f172a] p-3 rounded-lg text-xs text-white z-[1000] shadow-lg">
-        <div className="font-semibold mb-2">Clusters</div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 bg-red-500 rounded-full"></span> C1
+      {/* Loading */}
+      {loading && (
+        <div className="absolute top-20 left-5 text-white z-[1000]">
+          Loading data...
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 bg-blue-500 rounded-full"></span> C2
+      )}
+
+      {/* Insights */}
+      {insights && (
+        <div className="absolute top-20 right-5 bg-[#0f172a] p-4 rounded-xl text-sm text-white z-[1000] shadow-lg w-64">
+          <h3 className="font-semibold mb-3">🧠 Insights</h3>
+
+          <p className="mb-2">
+            🔥 Hottest Cluster:{" "}
+            <span className="text-red-400 font-bold">
+              C{insights.hottestCluster + 1}
+            </span>
+          </p>
+
+          <p className="mb-2">
+            🌡 Avg Temp:{" "}
+            <span className="font-semibold">{insights.avgTemp}°C</span>
+          </p>
+
+          <p className="text-xs text-gray-400 mt-3">
+            ⚠ Urban heat hotspot detected.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 bg-green-500 rounded-full"></span> C3
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 bg-yellow-400 rounded-full"></span> C4
-        </div>
-      </div>
-
-{insights && (
-  <div className="absolute top-20 right-5 bg-[#0f172a] p-4 rounded-xl text-sm text-white z-[1000] shadow-lg w-64">
-    
-    <h3 className="font-semibold mb-3">🧠 Insights</h3>
-
-    <p className="mb-2">
-      🔥 Hottest Cluster: <span className="text-red-400 font-bold">C{insights.hottestCluster + 1}</span>
-    </p>
-
-    <p className="mb-2">
-      🌡 Avg Temp: <span className="font-semibold">{insights.avgTemp}°C</span>
-    </p>
-
-    <p className="text-xs text-gray-400 mt-3">
-      ⚠ Urban heat hotspot detected. Consider increasing vegetation & reducing density.
-    </p>
-  </div>
-)}
+      )}
 
       {/* Map */}
       <MapContainer
-        center={[18.5204, 73.8567] as [number, number]}
+        center={[18.5204, 73.8567]}
         zoom={12}
         className="h-[90vh] w-full"
       >
@@ -192,7 +206,7 @@ const insights = getClusterInsights();
           zones.map((zone, i) => (
             <CircleMarker
               key={i}
-              center={[zone.latitude, zone.longitude] as [number, number]}
+              center={[zone.latitude, zone.longitude]}
               radius={8}
               pathOptions={{
                 color: getClusterColor(zone.cluster),
@@ -203,7 +217,7 @@ const insights = getClusterInsights();
                 <strong>{zone.name}</strong><br />
                 🌡 {zone.temperature}°C<br />
                 ⚠ {zone.riskLevel}<br />
-                🧠 Cluster: {zone.cluster}
+                🧠 Cluster: {zone.cluster ?? 0}
               </Popup>
             </CircleMarker>
           ))}
