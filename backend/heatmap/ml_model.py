@@ -8,53 +8,30 @@ def get_heat_clusters():
     data = HeatData.objects.all()
     data_list = list(data)
 
+    # ✅ No data case
     if len(data_list) == 0:
         return []
 
-    # ✅ Combine features
+    # ✅ Features: latitude, longitude, temperature
     features = np.array([
-        [d.latitude, d.longitude, d.temperature]
+        [float(d.latitude), float(d.longitude), float(d.temperature)]
         for d in data_list
     ])
 
-    # ✅ Normalize data
+    # ✅ Scale features
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(features)
 
-    # 🔥 Give more weight to temperature
-    # index 2 = temperature
-    scaled_features[:, 2] *= 2.5   # 🔥 adjust this weight
+    # 🔥 Give more importance to temperature
+    scaled_features[:, 2] *= 2.5
 
-    # 🔥 handle small data
+    # 🔥 Handle small dataset
     if len(scaled_features) < 3:
-        result = []
-        for d in data_list:
-            result.append({
-                "name": d.name,
-                "temperature": d.temperature,
-                "latitude": d.latitude,
-                "longitude": d.longitude,
-                "riskLevel": d.riskLevel,
-                "cluster": 0
-            })
-        return result
+        return [0] * len(scaled_features)
 
-    # ✅ KMeans
+    # ✅ Apply KMeans clustering
     kmeans = KMeans(n_clusters=3, n_init=10, random_state=0)
     kmeans.fit(scaled_features)
 
-    labels = kmeans.labels_
-
-    # ✅ return structured data
-    result = []
-    for i, d in enumerate(data_list):
-        result.append({
-            "name": d.name,
-            "temperature": d.temperature,
-            "latitude": d.latitude,
-            "longitude": d.longitude,
-            "riskLevel": d.riskLevel,
-            "cluster": int(labels[i])
-        })
-
-    return result
+    # ✅ RETURN ONLY LABELS (CRITICAL)
+    return kmeans.labels_.astype(int).tolist()

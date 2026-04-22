@@ -7,6 +7,7 @@ import MapView from "./pages/MapView";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 
+
 function App() {
   return (
     <BrowserRouter>

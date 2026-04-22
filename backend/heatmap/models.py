@@ -1,13 +1,27 @@
 from django.db import models
 
+
+# 🔥 LIVE DATA (only latest state per area)
 class HeatData(models.Model):
-    name = models.CharField(max_length=100)  # 🔥 NEW
+    name = models.CharField(max_length=100, unique=True)
     latitude = models.FloatField()
     longitude = models.FloatField()
     temperature = models.FloatField()
-    humidity = models.FloatField(null=True, blank=True)
-    riskLevel = models.CharField(max_length=50)  # 🔥 NEW
+    riskLevel = models.CharField(max_length=20)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.temperature}°C)"
+
+
+# 📊 HISTORY DATA (stores all records)
+class HeatDataHistory(models.Model):
+    name = models.CharField(max_length=100)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    temperature = models.FloatField()
+    riskLevel = models.CharField(max_length=20)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def _str_(self):
-        return f"{self.name} - {self.temperature}°C"
+    def __str__(self):
+        return f"{self.name} - {self.temperature}°C @ {self.timestamp}"

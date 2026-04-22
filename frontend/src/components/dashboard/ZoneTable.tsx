@@ -1,38 +1,69 @@
-import { puneZones } from "../../data/puneData";
+import { useEffect, useState } from "react";
+
+type Zone = {
+  name: string;
+  temperature: number;
+  riskLevel: string;
+  latitude?: number;
+  longitude?: number;
+  cluster?: number;
+};
 
 export const ZoneTable = () => {
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [loading, setLoading] = useState(true);
+
+ useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/clusters/");
+        const data = await res.json();
+
+        console.log("TABLE DATA:", data);
+
+        setZones(data);        // ✅ update state
+        setLoading(false);     // ✅ VERY IMPORTANT
+      } catch (err) {
+        console.error(err);
+        setLoading(false);     // ✅ avoid infinite loading
+      }
+    };
+
+    fetchData();
+  }, []);  
   return (
     <>
       <h2 className="dashboard-title mb-4">
         Zone Risk Assessment
       </h2>
+
       <p className="text-xs text-gray-400 mb-4">
-        16 zones analyzed
-      </p>
+          {loading ? "Loading..." : `${zones.length} zones analyzed`}
+        </p>
+
+      {loading && <p className="text-gray-400">Loading...</p>}
 
       <table className="w-full text-sm">
         <thead>
           <tr className="text-gray-400 border-b border-[#1f2937]">
-            <th className="p-2 text-left">Zone</th>
+            <th className="p-2">Zones</th>
             <th className="p-2">Temp</th>
-            <th className="p-2">Build %</th>
-            <th className="p-2">NDVI</th>
-            <th className="p-2">Score</th>
             <th className="p-2">Risk</th>
           </tr>
         </thead>
 
         <tbody>
-          {puneZones.map((z, i) => (
+          {zones.map((z) => (
             <tr
-              key={i}
+              key={z.name} // ✅ IMPORTANT FIX
               className="border-b border-[#1f2937] hover:bg-[#1f2937]/40"
             >
               <td className="p-2">{z.name}</td>
-              <td className="p-2 text-orange-400">{z.temperature}°</td>
-              <td className="p-2">{z.buildingDensity}%</td>
-              <td className="p-2 text-cyan-400">{z.vegetationIndex}</td>
-              <td className="p-2">{z.score}</td>
+
+              <td className="p-2 text-orange-400">
+                {z.temperature}°
+              </td>
+
               <td className="p-2">
                 <span
                   className={`px-3 py-1 rounded-full text-xs ${

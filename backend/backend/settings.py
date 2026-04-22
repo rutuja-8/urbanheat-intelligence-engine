@@ -8,7 +8,8 @@ SECRET_KEY = 'django-insecure-change-this-key'
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']  # ✅ allow local frontend
+
 
 # ========================
 # APPLICATIONS
@@ -23,14 +24,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'corsheaders',   # ✅ ADD THIS
     'heatmap',
 ]
+
 
 # ========================
 # MIDDLEWARE
 # ========================
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # ✅ MUST BE FIRST
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -40,11 +44,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
 # ========================
 # URL CONFIG
 # ========================
 
 ROOT_URLCONF = 'backend.urls'
+
 
 # ========================
 # TEMPLATES
@@ -66,11 +72,13 @@ TEMPLATES = [
     },
 ]
 
+
 # ========================
 # WSGI
 # ========================
 
 WSGI_APPLICATION = 'backend.wsgi.application'
+
 
 # ========================
 # DATABASE (MySQL)
@@ -81,30 +89,24 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'urban_heat_db',
         'USER': 'root',
-        'PASSWORD': 'rajas2007',  
+        'PASSWORD': 'rutuja2005',
         'HOST': 'localhost',
         'PORT': '3306',
     }
 }
+
 
 # ========================
 # PASSWORD VALIDATION
 # ========================
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
 
 # ========================
 # INTERNATIONALIZATION
@@ -112,11 +114,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'  # ✅ better for your project
 
 USE_I18N = True
-
 USE_TZ = True
+
 
 # ========================
 # STATIC FILES
@@ -124,8 +126,16 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+
 # ========================
 # DEFAULT FIELD TYPE
 # ========================
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# ========================
+# 🔥 CORS FIX (IMPORTANT)
+# ========================
+
+CORS_ALLOW_ALL_ORIGINS = True
